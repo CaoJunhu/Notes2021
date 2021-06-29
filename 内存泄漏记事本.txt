@@ -1,0 +1,86 @@
+https://blog.csdn.net/netanimals/article/details/7454820 
+检查MFC程序的内存泄露
+
+介绍：
+　　动态分配、回收内存是C/C++编程语言一个最强的特点，但是中国哲学家孙（Sun Tzu，我不知道是谁？那位知道？） 指出，最强的同时也是最弱的。这句话对C/C++应用来说非常正确，在内存处理出错的地方通常就是BUGS产生的地方。一个最敏感和难检测的BUG就是内存泄漏-没有把前边分配的内存成功释放，一个小的内存泄漏可能不需要太注意，但是程序泄漏大块内存，或者渐增式的泄漏内存可能引起的现象是：先是性能低下，再就是引起复杂的内存耗尽错误。最坏的是，一个内存泄漏程序可能用完了如此多的内存以至于引起其他的程序出错，留给用户的是不能知道错误到底来自哪里。另外，一个看上去无害的内存泄漏可能是另一个问题的先兆。幸运的是VC++DEBUGER和CRT库提供了一组有效的检测和定位内存泄漏的工具。本文描述如何使用这些工具有效和系统的排除内存泄漏。 
+　　
+启动内存泄漏检测：
+　　主要的检测工具是DEBUGER和CRT堆除错函数。要使除错函数生效，必须要在你的程序中包含以下几个语句：
+　　
+　　#define _CRTDBG_MAP_ALLOC
+　　#include "stdlib.h"
+　　#include "crtdbg.h"
+　　并且这些#include 语句必须按上边给出的顺序使用。如果你改变了顺序，可能导致使用的函数工作不正常。包含crtdbg.h的作用是用malloc和free函数的debug版本（_malloc_dbg 和 _free_dbg）来替换他们，他们能跟踪内存分配和回收。这个替换仅仅是在debug状态下生效，Relese版本中还是使用普通的malloc和free函数。
+　　上面的#define语句使用crt堆函数相应的debug版本来替换正常的堆函数。这个语句不是必需的，但是没有他，你可能会失去一些有用的内存泄漏信息。
+　　
+　　你一旦在你的程序中增加了以上的语句，你可以通过在程序中增加_CrtDumpMemoryLeaks();函数来输出内存泄漏信息。
+当你在debuger下运行你的程序时，_CrtDumpMemoryLeaks 显示内存泄漏信息在OutPut窗口的Debug标签项里。内存泄漏信息举例如下：
+　　
+　　Detected memory leaks!
+　　Dumping objects ->
+　　C:\PROGRAM FILES\VISUAL STUDIO\MyProjects\leaktest\leaktest.cpp(20) : {18} 
+　　normal block at 0x00780E80, 64 bytes long.
+　　Data: <　> CD CD CD CD CD CD CD CD CD CD CD CD CD CD CD CD 
+　　Object dump complete.
+　　如果你没有使用 #define _CRTDBG_MAP_ALLOC语句的话，输出信息将如下：
+　　
+　　Detected memory leaks!
+　　Dumping objects ->
+　　{18} normal block at 0x00780E80, 64 bytes long.
+　　Data: <　> CD CD CD CD CD CD CD CD CD CD CD CD CD CD CD CD 
+　　Object dump complete.
+　　
+　　像你所看到的，当_CRTDBG_MAP_ALLOC 被定义后_CrtDumpMemoryLeaks给了你很多有用的信息。在没有定义_CRTDBG_MAP_ALLOC 的情况下，显示信息包含：
+　　1.内存分配的编号（大括弧中的数字）；
+　　2.内存快的类型（普通型、客户端型、CRT型）；
+　　3.16进制表示的内存位置；
+　　4.内存快的大小；
+　　5.前16bytes的内容。
+　　
+　　如果定义了_CRTDBG_MAP_ALLOC ，输出信息还包含当前泄漏内存是在那个文件中被分配的定位信息。文件名后圆括弧中的数字是行数。如果你双击这行信息，
+　　
+　　C:\PROGRAM FILES\VISUAL STUDIO\MyProjects\leaktest\leaktest.cpp(20) : {18} 
+　　normal block at 0x00780E80, 64 bytes long.
+　　
+　　光标就会跳转到原文件中分配这个内存的行前。选择Output中的题是行，按F4能达到同样的效果。
+　　
+　　使用Using _CrtSetDbgFlag：
+　　如果你的程序的退出点只有一个的话，调用_CrtDumpMemoryLeaks将是非常容易。但是，如果你的程序有多个退出点话会是什么样一个情况？如果不想在每个退出点都调用_CrtDumpMemoryLeaks，你可以在程序的开始包含以下调用：
+　　
+　　_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+　　这个语句会在你的程序结束时自动调用_CrtDumpMemoryLeaks，但是你必须象前边提到的那样设置_CRTDBG_ALLOC_MEM_DF 和 _CRTDBG_LEAK_CHECK_DF这两个标志位。
+
+
+
+
+
+
+https://blog.csdn.net/flowing_wind/article/details/81301001
+【C++】智能指针详解
+
+在C++中，动态内存的管理是用一对运算符完成的：new和delete，new:在动态内存中为对象分配一块空间并返回一个指向该对象的指针，delete：指向一个动态独享的指针，销毁对象，并释放与之关联的内存。
+
+动态内存管理经常会出现两种问题：一种是忘记释放内存，会造成内存泄漏；一种是尚有指针引用内存的情况下就释放了它，就会产生引用非法内存的指针。
+
+为了更加容易（更加安全）的使用动态内存，引入了智能指针的概念。智能指针的行为类似常规指针，重要的区别是它负责自动释放所指向的对象。标准库提供的两种智能指针的区别在于管理底层指针的方法不同，shared_ptr允许多个指针指向同一个对象，unique_ptr则“独占”所指向的对象。标准库还定义了一种名为weak_ptr的伴随类，它是一种弱引用，指向shared_ptr所管理的对象，这三种智能指针都定义在memory头文件中。
+
+不要混合使用普通指针和智能指针
+
+https://blog.csdn.net/CSNN2019/article/details/114220411?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_title-0&spm=1001.2101.3001.4242
+c++11中智能指针的原理，使用，实现
+
+https://www.cnblogs.com/WindSun/p/11444429.html
+（替换auto_ptr）unique_ptr实现独占式拥有或严格拥有概念，保证同一时间内只有一个智能指针可以指向该对象。它对于避免资源泄露(例如“以new创建对象后因为发生异常而忘记调用delete”)特别有用
+
+
+
+
+
+解决方法：
+1.对于定义的局部变量 new开辟的内存   可以分两种方式进行检查：
+（1）如果在函数返回前使用完毕直接在使用后delete；
+（2）如果在使用前就遇到了return返回，那么所有return前都得加上delete；
+
+
+
+
