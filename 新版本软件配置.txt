@@ -1,7 +1,6 @@
 1.安装软件：QT、Cmake、OPencv、boost库
 2.修改环境变量：此电脑-右键属性-高级系统设置-高级-环境变量
 将 Qt安装到${QT_PATH}后，需要将Qt的cmake文件加入环境变量CMAKE_PREFIX_PATH：
-
 ${QT_PATH}\msvc2019_64\lib\cmake\Qt5WidgetsTools
 ${QT_PATH}\msvc2019_64\lib\cmake\Qt5
 ${QT_PATH}\msvc2019_64\lib\cmake\Qt5CoreTools
@@ -11,16 +10,16 @@ boost也加入该变量
 C:\local\boost_1_76_0\lib32-msvc-14.2\cmake\Boost-1.76.0
 
 将Qt的动态链接库路径加入环境变量 PATH
-
 ${QT_PATH}\msvc2019_64\lib\bin
 
 下载并编译OpenCV到${OPENCV_PATH}，需要将OpenCV的cmake文件加入环境变量CMAKE_PREFIX_PATH：
-
 ${OPENCV_PATH}\build
 
 将OpenCV的动态链接库路径加入环境变量 PATH
-
 ${OPENCV_PATH}\build\bin\Debug
+
+将boost的动态链接库路径加入环境变量 PATH
+C:\local\boost_1_76_0\lib32-msvc-14.2\cmake\Boost-1.76.0
 
 环境变量配置完毕后需要重启计算机
 
