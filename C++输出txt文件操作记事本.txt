@@ -1,0 +1,45 @@
+1.需要调用头文件
+#include<fstream>
+ofstream         //文件写操作 内存写入存储设备 
+ifstream         //文件读操作，存储设备读区到内存中
+fstream          //读写操作，对打开的文件可进行读写操作 
+在实际应用中，根据需要的不同，选择不同的类来定义：
+如果想以输入方式打开，就用ifstream来定义;
+如果想以输出方式打开，就用ofstream来定义;
+如果想以输入/输出方式来打开，就用fstream来定义。
+2.
+创建txt文件并将打印内容输出至该文件：
+ofstream of("C:\\Users\\admin\\Desktop\\log.txt", ios::out);//默认每次运行会重新覆盖
+ofstream of("C:\\Users\\admin\\Desktop\\log.txt", ios::out|ios::app);//每次运行接着上次的内容
+打印语句：
+of << "nihao" << i << endl;
+
+拓展：
+打开文件open()
+　　void open(const char* filename,int mode,int access);
+	参数：  filename：　　要打开的文件名
+			mode：　　　　要打开文件的方式
+　　		access：　　　打开文件的属性
+　　access, 打开文件的属性取值是：
+　　		0：普通文件，打开访问
+　　		1：只读文件
+　　		2：隐含文件
+　　		4：系统文件
+关闭文件close()
+	打开的文件使用完成后一定要关闭，fstream提供了成员函数close()来完成此操作，
+	如：file1.close();就把file1相连的文件关闭。
+	
+	
+ios::in	为输入(读)而打开文件
+ios::out	为输出(写)而打开文件
+ios::ate	初始位置：文件尾
+ios::app	所有输出附加在文件末尾
+ios::trunc	如果文件已存在则先删除该文件
+ios::binary	二进制方式
+这些方式是能够进行组合使用的，以“或”运算（“|”）的方式：例如
+ofstream out;
+out.open("Hello.txt", ios::in|ios::out|ios::binary)                 //根据自己需要进行适当的选取
+3.
+以下两个操作都必须在文件关闭后才可以使用
+remove("文件名”）；把这个文件删除
+rename("旧文件名","新文件名");

@@ -1,0 +1,113 @@
+1.头文件
+#include <thread>  C++标准库线程头文件
+#include <mutex>   互斥锁所需头文件
+2.
+开启线程方法：
+（1）thread 一个实例，然后调用对应的线程执行函数名
+	如： thread state(&StateListener::StateThread,StateListener::Instance());//开启线程
+	注意这里建立了一个类名为StateListener，其中Instance()是类的单例，即第二个参数只有建立类后写入类的实例；
+
+（2）注意要保证主线程和子线程互不干扰，独立执行，就必须加上一句detach
+	如子线程state，需要加上state.detach();//用于与主线程进行分离
+
+关闭线程方法：退出线程函数即可
+
+3.互斥锁的运用与关键区的使用类似，可先建立一个变量为mutex类型变量，然后调用lock()和unlock()函数，这两个函数之间就是要保护的部分
+
+4.具体实例：
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <fstream>
+
+using namespace std;
+
+ofstream of("C:\\Users\\admin\\Desktop\\log.txt", ios::out);
+
+class StateListener {
+    
+public:
+    static shared_ptr<StateListener> Instance();//单例
+    void StateThread();              //线程实现函数
+    bool StartStateListening();      //开始监听
+    void ChangeStateListening();     //修改状态
+    bool ShutdownStateListening();   //结束监听
+    shared_ptr<mutex> GetMutex();    //获取锁
+protected:
+    StateListener();//构造函数
+private:
+    static shared_ptr<StateListener> m_Instance;
+    shared_ptr<mutex> m_statelock;     //互斥量用于线程锁保护 与关键区相似
+    bool m_bShutDownThreadFlag;        //关闭线程标志位
+    bool m_bChangeStateFlag;           //改变状态标志位
+    bool m_bThreadAlive;               //线程是否存活标志位
+};
+
+int main()
+{
+    StateListener::Instance()->StartStateListening();
+    for (int i = 1; i < 1e5; i++) {
+        StateListener::Instance()->GetMutex()->lock();
+        of << "nihao" << i << endl;
+        StateListener::Instance()->GetMutex()->unlock();
+    }
+    StateListener::Instance()->ShutdownStateListening();
+    of << "end1" << endl;
+    of.close();
+    return 0;
+}
+shared_ptr<StateListener> StateListener::m_Instance = nullptr;
+shared_ptr<StateListener> StateListener::Instance()//单例
+{
+    if (m_Instance == nullptr) {
+        m_Instance = shared_ptr<StateListener>(new StateListener);
+    }
+    return m_Instance;
+}
+
+void StateListener::StateThread()//线程实现函数
+{
+    for (int i = 1; i < 1e5 && !StateListener::m_bShutDownThreadFlag; i++) {
+        m_statelock->lock();
+        of << i << endl;
+        m_statelock->unlock();
+    }
+    of << "end2" << endl;
+    return;
+}
+
+bool StateListener::StartStateListening()//开始监听
+{
+    static bool IsFirstStart = true;//保证只创建一次线程
+    if (IsFirstStart)
+    {
+        StateListener::Instance()->m_bThreadAlive = true;//线程开启标志位
+        thread state(&StateListener::StateThread, StateListener::Instance());//开启线程
+        state.detach();//用于与主线程进行分离
+        IsFirstStart = false;
+    }
+    return true;
+}
+
+void StateListener::ChangeStateListening()//修改状态
+{
+    m_bChangeStateFlag = true;
+}
+
+bool StateListener::ShutdownStateListening()//结束监听
+{
+    if (m_bThreadAlive) {
+        m_bShutDownThreadFlag = true;
+        m_bThreadAlive = false;
+    }
+    return true;
+}
+
+shared_ptr<mutex> StateListener::GetMutex()//获取锁
+{
+    return m_statelock;
+}
+
+StateListener::StateListener() :m_statelock(new mutex), m_bShutDownThreadFlag(false), m_bChangeStateFlag(false), m_bThreadAlive(false)
+{ }

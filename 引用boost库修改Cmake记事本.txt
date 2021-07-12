@@ -1,0 +1,23 @@
+boost库是很多人编写的一个库，内有很多hpp文件，是通过CMake进行组建的，CMake的作用就是将所有hpp文件组织起来，将自己的环境变量中添加boost库的CMake文件路径，这样就会使得其他文件通过CMake文件之间的互相查找就可以查找到想要调取的boost库中的某个hpp文件。
+
+通过CMake中引用Boost库https://blog.csdn.net/jinzhu1911/article/details/104940277
+
+通过调用find_package可以找到头文件和所需要的库文件或者是一个CMake打包配置文件。
+find_package(Boost
+  [version] [EXACT]      # 可选项，最小版本或者确切所需版本
+  [REQUIRED]             # 可选项，如果找不到所需库，报错
+  [COMPONENTS <libs>...] # 所需的库名称，比如说. "date_time" 代表 "libboost_date_time"
+  )  
+
+例如：find_package(Boost REQUIRED)
+
+常使用变量如下：
+Boost_FOUND            - 如果找到了所需的库就设为true
+Boost_INCLUDE_DIRS     - Boost头文件搜索路径
+Boost_LIBRARY_DIRS     - Boost库的链接路径
+Boost_LIBRARIES        - Boost库名，用于链接到目标程序
+Boost_VERSION          - 从boost/version.hpp文件获取的版本号
+Boost_LIB_VERSION      - 某个库的版本
+注意使用时格式： ${变量}
+
+例如：include_directories(${Boost_INCLUDE_DIRS})
